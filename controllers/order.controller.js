@@ -2,7 +2,7 @@ import { Order, Service, User } from '../models/index.js';
 
 exports.addOrder = async (req, res) => {
     try {
-        const { SellerId, CustomerId, Type, ProductId, CarModel, Date } = req.body;
+        const { SellerId, CustomerId, Type, ProductId, CarModel } = req.body;
         
         const newOrder = await Order.create({
             SellerId,
@@ -10,7 +10,6 @@ exports.addOrder = async (req, res) => {
             Type,
             ProductId,
             CarModel,
-            Date,
             status: 'pending'
         });
 
