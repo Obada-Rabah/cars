@@ -4,7 +4,9 @@ import { authenticateUser } from '../middlewares/auth.middleware.js'
 import * as ordersController from '../controllers/order.controller.js'
 const ordersRouter = express.Router()
 
-ordersRouter.post('/:id', authenticateUser, asyncHandler(ordersController.addOrder));
+ordersRouter.post('/service/:id', authenticateUser, asyncHandler(ordersController.addServiceOrder));
+
+ordersRouter.post('/car/:id', authenticateUser, asyncHandler(ordersController.addCarOrder));
 
 ordersRouter.get('/MyOrders', authenticateUser, asyncHandler(ordersController.GetMyOrders));
 
