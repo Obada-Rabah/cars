@@ -1,17 +1,16 @@
 import { Order, Service, User } from '../models/index.js';
 
-// Add new order (now includes D&T)
 exports.addOrder = async (req, res) => {
     try {
-        const { customerId, providerId, serviceId, startedAt, commercialType, contractCard } = req.body;
+        const { SellerId, CustomerId, Type, ProductId, CarModel, Date } = req.body;
         
         const newOrder = await Order.create({
-            customerId,
-            providerId,
-            serviceId,
-            startedAt: new Date(startedAt), // Date & Time from request
-            commercialType,
-            contractCard,
+            SellerId,
+            CustomerId,
+            Type,
+            ProductId,
+            CarModel,
+            Date,
             status: 'pending'
         });
 
