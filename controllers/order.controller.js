@@ -1,19 +1,13 @@
 import { Car, Order, Service, User } from '../models/index.js';
 
-export async function addOrder (req, res){
+export async function addServiceOrder (req, res){
     try {
         
         const ProductId = req.params.id;
-        
-        const Type = req.body.Type;
-
-        if(Type == 'car'){
-            const car = await Car.findByPk(ProductId)
-            const SellerId = car.userId
-        }else if(Type == 'service'){
-            const service = await Service.findByPk(ProductId)
-            const SellerId = service.providerId
-        }
+        const service = await Service.findByPk(ProductId);
+        const SellerId = service.providerId;
+        const Type = 'service';
+        const CarModel = req.body.CarModel;
 
         const newOrder = await Order.create({
             SellerId,
@@ -23,9 +17,13 @@ export async function addOrder (req, res){
             CarModel
         });
 
+        const user = await User.findByPk(SellerId);
+        const Provider = user.firstName;
+        const ServiceName = service.name
+
         res.status(201).json({
             success: true,
-            data: newOrder
+            data: {Provider, ServiceName ,CarModel }
         });
     } catch (error) {
         res.status(500).json({
@@ -34,6 +32,39 @@ export async function addOrder (req, res){
         });
     }
 };
+
+export async function addCarOrder (req, res){
+    try {
+        
+        const ProductId = req.params.id;
+        const car = await Car.findByPk(ProductId);
+        const SellerId = car.userId;
+        const Type = 'car';
+        const CarModel = car.model;
+
+        const newOrder = await Order.create({
+            SellerId,
+            ProductId,
+            CustomerId: req.user.id,
+            Type,   
+            CarModel
+        });
+
+        const user = await User.findByPk(SellerId);
+        const userName = user.name;
+
+        res.status(201).json({
+            success: true,
+            data: {userName ,CarModel ,Type}
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
+
 
 // Get customer's orders (updated with relationships)
 export async function GetMyOrders (req, res){
