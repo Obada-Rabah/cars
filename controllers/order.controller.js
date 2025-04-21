@@ -2,12 +2,12 @@ import { Order, Service, User } from '../models/index.js';
 
 export async function addOrder (req, res){
     try {
-        const { SellerId, CustomerId, Type, ProductId, CarModel } = req.body;
+        const { SellerId, Type, ProductId, CarModel } = req.body;
         
         const newOrder = await Order.create({
             SellerId,
-            CustomerId,
-            Type,
+            CustomerId: req.user.id,
+            Type,   
             ProductId,
             CarModel,
             status: 'pending'
