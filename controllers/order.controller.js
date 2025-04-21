@@ -66,17 +66,12 @@ export async function addCarOrder (req, res){
 };
 
 
-// Get customer's orders (updated with relationships)
 export async function GetMyOrders (req, res){
     try {
-        const { customerId } = req.params;
+        const  CustomerId  = req.user.id;
         
         const orders = await Order.findAll({
-            where: { customerId },
-            include: [
-                { model: Service },
-                { model: User, as: 'provider' }
-            ]
+            where: { CustomerId }
         });
 
         res.status(200).json({
