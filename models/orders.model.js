@@ -33,4 +33,4 @@ const Order = sequelize.define('Order', {
     }
 }, { timestamps: true });
 
-module.exports = Order;
+export {Order};

@@ -1,6 +1,6 @@
 import { Order, Service, User } from '../models/index.js';
 
-exports.addOrder = async (req, res) => {
+export async function addOrder (req, res){
     try {
         const { SellerId, CustomerId, Type, ProductId, CarModel } = req.body;
         
@@ -26,7 +26,7 @@ exports.addOrder = async (req, res) => {
 };
 
 // Get customer's orders (updated with relationships)
-exports.getMyOrders = async (req, res) => {
+export async function GetMyOrders (req, res){
     try {
         const { customerId } = req.params;
         
@@ -51,7 +51,7 @@ exports.getMyOrders = async (req, res) => {
 };
 
 // Get provider's orders (updated with relationships)
-exports.getProviderOrders = async (req, res) => {
+export async function GetProviderOrders(res, req) {
     try {
         const { providerId } = req.params;
         
@@ -73,10 +73,14 @@ exports.getProviderOrders = async (req, res) => {
             message: error.message
         });
     }
-};
+}
+
+export async function deleteOrder(req,res){
+
+}
 
 // Accept order (now with D&T handling)
-exports.acceptOrder = async (req, res) => {
+export async function acceptOrder(req, res){
     try {
         const { orderId } = req.params;
         const { startedAt } = req.body; // Date & Time for acceptance
@@ -100,5 +104,9 @@ exports.acceptOrder = async (req, res) => {
         });
     }
 };
+
+export async function declineOrder(req,res){
+
+}
 
 // Other controller methods remain similar but would include relationship handling

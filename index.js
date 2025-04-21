@@ -6,6 +6,7 @@ import sequelize, { initDB } from './utils/db.js'
 import { User } from './models/index.js'
 import morgan from 'morgan'
 import providerRouter from './Routes/providers.router.js'
+import ordersRouter from './Routes/orders.router.js'
 
 dotenv.config()
 
@@ -23,6 +24,8 @@ app.use('/api/auth', authRouter)
 app.use('/api/cars', carsRouter)
 
 app.use('/api/providers', providerRouter)
+
+app.use('api/orders', ordersRouter)
 
 
 app.use((err, req, res, next) => {
