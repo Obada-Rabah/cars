@@ -1,16 +1,26 @@
-import { Order, Service, User } from '../models/index.js';
+import { Car, Order, Service, User } from '../models/index.js';
 
 export async function addOrder (req, res){
     try {
-        const { SellerId, Type, ProductId, CarModel } = req.body;
         
+        const ProductId = req.params.id;
+        
+        const Type = req.body.Type;
+
+        if(Type == 'car'){
+            const car = await Car.findByPk(ProductId)
+            const SellerId = car.userId
+        }else if(Type == 'service'){
+            const service = await Service.findByPk(ProductId)
+            const SellerId = service.providerId
+        }
+
         const newOrder = await Order.create({
             SellerId,
+            ProductId,
             CustomerId: req.user.id,
             Type,   
-            ProductId,
-            CarModel,
-            status: 'pending'
+            CarModel
         });
 
         res.status(201).json({
