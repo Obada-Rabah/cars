@@ -1,5 +1,6 @@
 import { DataTypes } from 'sequelize';
 import sequelize from '../utils/db.js';
+import { Order } from './orders.model.js';
 
 const Car = sequelize.define('cars', {
     model: {
@@ -35,6 +36,8 @@ const Car = sequelize.define('cars', {
 Car.associate = (models) => {
     Car.belongsTo(models.User, { foreignKey: 'userId' });
 };
+
+Car.hasMany(Order, { foreignKey: 'ProductId' });
 
 export { Car };
 

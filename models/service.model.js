@@ -28,4 +28,16 @@ const Service = sequelize.define('services', {
     },
 });
 
+Service.associate = (models) => {
+    Service.belongsTo(models.User, {
+        as: 'Provider',
+        foreignKey: 'providerId'
+    });
+    Service.belongsToMany(models.Order, {
+        through: 'OrderService',
+        foreignKey: 'ServiceId'
+    });
+};
+
+
 export { Service };

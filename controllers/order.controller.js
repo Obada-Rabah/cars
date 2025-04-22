@@ -1,90 +1,79 @@
 import { Car, Order, Service, User } from '../models/index.js';
 
-export async function addServiceOrder (req, res){
+export async function addOrder(req, res) {
     try {
-        
-        const ProductId = req.params.id;
-        const service = await Service.findByPk(ProductId);
-        const SellerId = service.providerId;
-        const Type = 'service';
-        const CarModel = req.body.CarModel;
+        const { serviceId } = req.params;
+        const { CarModel } = req.body;
+        const customerId = req.user.id;
 
-        const newOrder = await Order.create({
-            SellerId,
-            ProductId,
-            CustomerId: req.user.id,
-            Type,   
-            CarModel
-        });
+        // Get service with its provider
+    const service = await Service.findByPk(serviceId);
 
-        const user = await User.findByPk(SellerId);
-        const Provider = user.firstName;
-        const ServiceName = service.name
+    const userId = service.providerId;
+    const user = await User.findByPk(userId)
+    const provider = user.firstName
 
-        res.status(201).json({
-            success: true,
-            data: {Provider, ServiceName ,CarModel }
-        });
-    } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: error.message
-        });
+    if (!service) {
+      return res.status(404).json({ message: 'Service not found' });
     }
-};
 
-export async function addCarOrder (req, res){
+    // Create order
+    const order = await Order.create({
+      providerId: userId,
+      CustomerId: customerId,
+      ServiceId: serviceId,
+      CarModel,
+      status: 'pending'
+    });
+
+
+    res.status(201).json({
+        data:{
+            "provider": provider,
+            "service": service.name,
+            Date,
+            "price": service.price
+        }
+    });
+    
+  } catch (error) {
+    console.error('Order creation error:', error);
+    res.status(500).json({ 
+      message: 'Error creating order',
+      error: error.message 
+    });
+  }
+}
+
+export async function GetMyOrders(req, res) {
     try {
-        
-        const ProductId = req.params.id;
-        const car = await Car.findByPk(ProductId);
-        const SellerId = car.userId;
-        const Type = 'car';
-        const CarModel = car.model;
-
-        const newOrder = await Order.create({
-            SellerId,
-            ProductId,
-            CustomerId: req.user.id,
-            Type,   
-            CarModel
-        });
-
-        const user = await User.findByPk(SellerId);
-        const userName = user.name;
-
-        res.status(201).json({
-            success: true,
-            data: {userName ,CarModel ,Type}
-        });
-    } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: error.message
-        });
-    }
-};
-
-
-export async function GetMyOrders (req, res){
-    try {
-        const  CustomerId  = req.user.id;
-        
         const orders = await Order.findAll({
-            where: { CustomerId }
+            where: { CustomerId: req.user.id },
+            include: [
+                {
+                    model: User,
+                    as: 'Provider',
+                    attributes: ['id', 'firstName', 'lastName']
+                },
+                {
+                    model: Service,
+                    attributes: ['id', 'name', 'price']
+                }
+            ],
+            order: [['createdAt', 'DESC']]
         });
 
-        res.status(200).json({
-            success: true,
-            data: orders
-        });
+        res.json({ orders });
+
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: error.message
+        res.status(500).json({ 
+            message: 'Error fetching orders',
+            error: error.message 
         });
     }
-};
+}
+
+
 
 // Get provider's orders (updated with relationships)
 export async function GetProviderOrders(res, req) {

@@ -2,7 +2,7 @@ import { DataTypes } from 'sequelize';
 import sequelize from '../utils/db.js';
 
 const Order = sequelize.define('Order', {
-    SellerId: {
+    providerId: {
         type: DataTypes.INTEGER,
         allowNull: false
     },
@@ -10,11 +10,7 @@ const Order = sequelize.define('Order', {
         type: DataTypes.INTEGER,
         allowNull: false
     },
-    Type: {
-        type: DataTypes.ENUM('car', 'service'),
-        allowNull: false
-    },
-    ProductId: {
+    ServiceId: {
         type: DataTypes.INTEGER,
         allowNull: false
     },
@@ -32,5 +28,20 @@ const Order = sequelize.define('Order', {
         defaultValue: 'pending'
     }
 }, { timestamps: true });
+
+Order.associate = (models) => {
+    Order.belongsTo(models.User, { 
+        as: 'Provider',
+        foreignKey: 'providerId' 
+    });
+    Order.belongsTo(models.User, { 
+        as: 'Customer',
+        foreignKey: 'CustomerId' 
+    });
+    Order.belongsToMany(models.Service, {
+        through: 'OrderService',
+        foreignKey: 'OrderId'
+    });
+};
 
 export {Order};

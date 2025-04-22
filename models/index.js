@@ -10,4 +10,12 @@ const models = {
     Order
 }
 
+
+// After importing all models
+Object.keys(models).forEach(modelName => {
+    if (models[modelName].associate) {
+      models[modelName].associate(models);
+    }
+  });
+
 export {User, Car, Service, Order};

@@ -37,12 +37,31 @@ const User = sequelize.define('users', {
 })
 
 User.associate = (models) => {
-    User.hasMany(models.Car, { foreignKey: 'userId' });
+    // Regular user's cars (if applicable)
+    User.hasMany(models.Car, { 
+        foreignKey: 'userId' 
+    });
+    
+    // --- PROVIDER-RELATED ASSOCIATIONS ---
+    // A provider can offer multiple services
+    User.hasMany(models.Service, { 
+        as: 'ProvidedServices',
+        foreignKey: 'providerId' 
+    });
+    
+    // A provider can receive orders (as a service provider)
+    User.hasMany(models.Order, { 
+        as: 'ReceivedOrders', // Orders received from customers/other providers
+        foreignKey: 'providerId' 
+    });
+    
+    // --- CUSTOMER-RELATED ASSOCIATIONS (for both regular users & providers) ---
+    // Any user (regular or provider) can place orders
+    User.hasMany(models.Order, { 
+        as: 'PlacedOrders', // Orders they placed as a customer
+        foreignKey: 'CustomerId' 
+    });
 };
-
-User.associate = (models) => {
-    User.hasMany(models.Service, { foreignKey: 'providerId' });
-} 
 
 export { User };
 

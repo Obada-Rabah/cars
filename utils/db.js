@@ -1,6 +1,7 @@
 import Sequelize from 'sequelize';
 import dotenv from 'dotenv';
 
+
 dotenv.config()
 
 const sequelize = new Sequelize(
@@ -22,6 +23,7 @@ export async function initDB() {
     console.log('Database is not working correctly')
   }
 }
+
 
 export default sequelize
 
