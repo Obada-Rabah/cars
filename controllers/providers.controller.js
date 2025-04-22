@@ -12,12 +12,7 @@ export async function getProviders (req,res){
 export async function addService (req,res){
 
     const user = await User.findByPk(req.user.id)
-    const userType = user.isprovider
 
-    if(user == true){
-        res.status(400).json({ message: 'You are not a provider'})
-        return;
-    }
     
     const newService = await Service.create({
         name: req.body.name,

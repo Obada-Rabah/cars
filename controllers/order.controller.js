@@ -47,23 +47,54 @@ export async function addOrder(req, res) {
 
 export async function GetMyOrders(req, res) {
     try {
+        const CustomerId = req.user.id;
+
+        // 1. First get all orders with basic info
         const orders = await Order.findAll({
-            where: { CustomerId: req.user.id },
-            include: [
-                {
-                    model: User,
-                    as: 'Provider',
-                    attributes: ['id', 'firstName', 'lastName']
-                },
-                {
-                    model: Service,
-                    attributes: ['id', 'name', 'price']
-                }
-            ],
-            order: [['createdAt', 'DESC']]
+            where: { CustomerId },
+            raw: true // Get plain JSON objects instead of Sequelize instances
         });
 
-        res.json({ orders });
+        if (!orders.length) {
+            return res.status(404).json({ message: 'No orders found' });
+        }
+
+        // 2. Extract unique provider and service IDs
+        const providerIds = [...new Set(orders.map(order => order.providerId))];
+        const serviceIds = [...new Set(orders.map(order => order.ServiceId))];
+
+        // 3. Get all providers and services in single queries
+        const providers = await User.findAll({
+            where: { id: providerIds },
+            attributes: ['id', 'firstName', 'lastName'],
+            raw: true
+        });
+
+        const services = await Service.findAll({
+            where: { id: serviceIds },
+            attributes: ['id', 'name', 'price'],
+            raw: true
+        });
+
+        // 4. Create lookup objects for faster access
+        const providerMap = providers.reduce((acc, provider) => {
+            acc[provider.id] = provider;
+            return acc;
+        }, {});
+
+        const serviceMap = services.reduce((acc, service) => {
+            acc[service.id] = service;
+            return acc;
+        }, {});
+
+        // 5. Enrich orders with provider/service details
+        const enrichedOrders = orders.map(order => ({
+            ...order,
+            provider: providerMap[order.providerId],
+            service: serviceMap[order.ServiceId]
+        }));
+
+        res.json({ orders: enrichedOrders });
 
     } catch (error) {
         res.status(500).json({ 
@@ -74,28 +105,69 @@ export async function GetMyOrders(req, res) {
 }
 
 
-
 // Get provider's orders (updated with relationships)
-export async function GetProviderOrders(res, req) {
+export async function GetProviderOrders(req, res) {
     try {
-        const { providerId } = req.params;
-        
+        const providerId = req.user.id;
+
+        // 1. Get all orders for this provider
         const orders = await Order.findAll({
             where: { providerId },
-            include: [
-                { model: Service },
-                { model: User, as: 'customer' }
-            ]
+            raw: true
         });
 
-        res.status(200).json({
-            success: true,
-            data: orders
+        if (!orders.length) {
+            return res.status(404).json({ message: 'No orders found for this provider' });
+        }
+
+        // 2. Extract unique customer and service IDs
+        const customerIds = [...new Set(orders.map(order => order.CustomerId))];
+        const serviceIds = [...new Set(orders.map(order => order.ServiceId))];
+
+        // 3. Get all customers and services in single queries
+        const customers = await User.findAll({
+            where: { id: customerIds },
+            attributes: ['id', 'firstName', 'lastName', 'phoneNumber'],
+            raw: true
         });
+
+        const services = await Service.findAll({
+            where: { id: serviceIds },
+            attributes: ['id', 'name', 'price'],
+            raw: true
+        });
+
+        // 4. Create lookup objects
+        const customerMap = customers.reduce((acc, customer) => {
+            acc[customer.id] = customer;
+            return acc;
+        }, {});
+
+        const serviceMap = services.reduce((acc, service) => {
+            acc[service.id] = service;
+            return acc;
+        }, {});
+
+        // 5. Enrich orders with customer, service, and car details
+        const enrichedOrders = orders.map(order => ({
+            id: order.id,
+            status: order.status,
+            date: order.createdAt,
+            carModel: order.CarModel, // Include car model
+            customer: customerMap[order.CustomerId],
+            service: serviceMap[order.ServiceId]
+        }));
+
+        res.json({ 
+            success: true,
+            orders: enrichedOrders 
+        });
+
     } catch (error) {
-        res.status(500).json({
+        res.status(500).json({ 
             success: false,
-            message: error.message
+            message: 'Error fetching provider orders',
+            error: error.message 
         });
     }
 }

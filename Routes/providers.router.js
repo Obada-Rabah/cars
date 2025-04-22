@@ -4,14 +4,15 @@ import { authenticateUser } from '../middlewares/auth.middleware.js'
 import authRouter from './auth.router.js'
 import { User } from '../models/index.js'
 import * as providerController from '../controllers/providers.controller.js'
+import { providerOnly } from '../middlewares/providerAuth.js'
 
 const providerRouter = express.Router()
 
 providerRouter.get('/providers', authenticateUser, asyncHandler(providerController.getProviders))
 
-providerRouter.post('/service', authenticateUser, asyncHandler(providerController.addService))
+providerRouter.post('/service', authenticateUser, providerOnly , asyncHandler(providerController.addService))
 
-providerRouter.get('/mine', authenticateUser, asyncHandler(providerController.GetMyServices))
+providerRouter.get('/mine', authenticateUser, providerOnly , asyncHandler(providerController.GetMyServices))
 
 
 export default providerRouter

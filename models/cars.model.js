@@ -37,7 +37,6 @@ Car.associate = (models) => {
     Car.belongsTo(models.User, { foreignKey: 'userId' });
 };
 
-Car.hasMany(Order, { foreignKey: 'ProductId' });
 
 export { Car };
 
