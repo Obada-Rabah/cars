@@ -11,10 +11,10 @@ ordersRouter.get('/MyOrders', authenticateUser, asyncHandler(ordersController.Ge
 
 ordersRouter.get('/provider/MyOrders', authenticateUser, providerOnly , asyncHandler(ordersController.GetProviderOrders))
 
-ordersRouter.post('/delete:id', authenticateUser, asyncHandler(ordersController.deleteOrder));
+ordersRouter.post('/delete/:id', authenticateUser, asyncHandler(ordersController.deleteOrder));
 
-ordersRouter.post('/acceptOrder:id', authenticateUser, asyncHandler(ordersController.acceptOrder))
+ordersRouter.put('/accept/:id', authenticateUser, asyncHandler(ordersController.acceptOrder))
 
-ordersRouter.post('/declineOrder:id', authenticateUser, asyncHandler(ordersController.declineOrder))
+ordersRouter.put('/decline/:id', authenticateUser, asyncHandler(ordersController.declineOrder))
 
 export default ordersRouter

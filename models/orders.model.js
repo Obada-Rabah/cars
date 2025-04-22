@@ -26,6 +26,10 @@ const Order = sequelize.define('Order', {
     status: {
         type: DataTypes.ENUM('pending', 'accepted', 'declined', 'completed'),
         defaultValue: 'pending'
+    },
+    declineReason: {
+        type: DataTypes.STRING,
+        allowNull: true
     }
 }, { timestamps: true });
 
@@ -38,9 +42,9 @@ Order.associate = (models) => {
         as: 'Customer',
         foreignKey: 'CustomerId' 
     });
-    Order.belongsToMany(models.Service, {
-        through: 'OrderService',
-        foreignKey: 'OrderId'
+    Order.belongsTo(models.Service, {
+        foreignKey: 'ServiceId',
+        as: 'Service' // This must match what you use in include
     });
 };
 

@@ -1,4 +1,6 @@
+import { DeletedOrder } from '../models/deletedOrders.model.js';
 import { Car, Order, Service, User } from '../models/index.js';
+import  sequelize  from '../utils/db.js'; // Add this import
 
 export async function addOrder(req, res) {
     try {
@@ -172,38 +174,261 @@ export async function GetProviderOrders(req, res) {
     }
 }
 
-export async function deleteOrder(req,res){
-
-}
-
-// Accept order (now with D&T handling)
-export async function acceptOrder(req, res){
+export async function deleteOrder(req, res) {
     try {
-        const { orderId } = req.params;
-        const { startedAt } = req.body; // Date & Time for acceptance
-        
-        const order = await Order.update(
-            { 
-                status: 'accepted',
-                startedAt: new Date(startedAt) 
-            },
-            { where: { id: orderId } }
-        );
+        const orderId = req.params.id;
+        const { reason } = req.body;
+        const customerId = req.user.id;
 
-        res.status(200).json({
-            success: true,
-            message: 'Order accepted successfully'
+        // 1. Find the order with associated data
+        const order = await Order.findByPk(orderId, {
+            include: [
+                { 
+                    model: User, 
+                    as: 'Provider',
+                    attributes: ['id', 'firstName', 'lastName']
+                },
+                {
+                    model: User,
+                    as: 'Customer',
+                    attributes: ['id', 'firstName', 'lastName']
+                },
+                {
+                    model: Service,
+                    as: 'Service', // Explicit alias matching your association
+                    attributes: ['id', 'name']
+                }
+            ]
         });
+
+        if (!order) {
+            return res.status(404).json({ message: 'Order not found' });
+        }
+
+        // 2. Verify the requester is the customer who created the order
+        if (order.CustomerId !== customerId) {
+            return res.status(403).json({ 
+                message: 'You can only delete your own orders' 
+            });
+        }
+
+        // 3. Get service name safely
+        const serviceName = order.Service 
+            ? order.Service.name 
+            : await Service.findByPk(order.ServiceId)
+                .then(s => s?.name || 'Deleted Service')
+                .catch(() => 'Unknown Service');
+
+        // 4. Archive to DeletedOrders
+        await DeletedOrder.create({
+            originalOrderId: order.id,
+            providerId: order.providerId,
+            providerName: `${order.Provider.firstName} ${order.Provider.lastName}`,
+            customerId: order.CustomerId,
+            customerName: `${order.Customer.firstName} ${order.Customer.lastName}`,
+            serviceId: order.ServiceId,
+            serviceName: serviceName,
+            CarModel: order.CarModel,
+            orderCreatedAt: order.createdAt,
+            originalStatus: order.status,
+            reason: reason || 'No reason provided'
+        });
+
+        // 5. Delete the original order
+        await order.destroy();
+
+        res.json({ 
+            success: true,
+            message: 'Order deleted and archived successfully'
+        });
+
     } catch (error) {
+        console.error('Delete error details:', {
+            error: error.message,
+            stack: error.stack,
+            params: req.params,
+            body: req.body
+        });
         res.status(500).json({
             success: false,
-            message: error.message
+            message: 'Error deleting order',
+            error: process.env.NODE_ENV === 'development' 
+                ? error.message 
+                : 'Internal server error'
         });
     }
-};
-
-export async function declineOrder(req,res){
-
 }
 
-// Other controller methods remain similar but would include relationship handling
+export async function acceptOrder(req, res) {
+    const transaction = await sequelize.transaction();
+    try {
+        const orderId = req.params.id;
+        const providerId = req.user.id;
+
+        // Verify order exists and belongs to this provider
+        const order = await Order.findOne({
+            where: { 
+                id: orderId,
+                providerId
+            },
+            transaction
+        });
+
+        if (!order) {
+            await transaction.rollback();
+            return res.status(404).json({
+                success: false,
+                message: 'Order not found or you are not the provider'
+            });
+        }
+
+        if (order.status !== 'pending') {
+            await transaction.rollback();
+            return res.status(400).json({
+                success: false,
+                message: `Only pending orders can be accepted (current status: ${order.status})`
+            });
+        }
+
+        // Update order
+        await order.update({
+            status: 'accepted',
+            updatedAt: new Date() // Changed from acceptedAt to updatedAt to match your schema
+        }, { transaction });
+
+        await transaction.commit();
+
+        try {
+            // Get updated order with customer details (outside transaction)
+            const updatedOrder = await Order.findByPk(orderId, {
+                include: [
+                    {
+                        model: User,
+                        as: 'Customer',
+                        attributes: ['firstName', 'lastName', 'phoneNumber']
+                    },
+                    {
+                        model: Service,
+                        as: 'Service',
+                        attributes: ['name', 'price']
+                    }
+                ]
+            });
+
+            return res.json({
+                success: true,
+                message: 'Order accepted successfully',
+                order: updatedOrder
+            });
+        } catch (queryError) {
+            console.error('Error fetching updated order:', queryError);
+            return res.json({
+                success: true,
+                message: 'Order accepted successfully (details unavailable)'
+            });
+        }
+
+    } catch (error) {
+        // Only rollback if transaction is still active
+        if (transaction.finished !== 'commit') {
+            await transaction.rollback();
+        }
+        
+        console.error('Accept order error:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'Failed to accept order',
+            error: process.env.NODE_ENV === 'development' 
+                ? error.message 
+                : 'Internal server error'
+        });
+    }
+}
+
+export async function declineOrder(req, res) {
+    const transaction = await sequelize.transaction();
+    try {
+        const orderId = req.params.id;
+        const providerId = req.user.id;
+        const { reason } = req.body; // Optional reason for declining
+
+        // Verify order exists and belongs to this provider
+        const order = await Order.findOne({
+            where: { 
+                id: orderId,
+                providerId
+            },
+            transaction
+        });
+
+        if (!order) {
+            await transaction.rollback();
+            return res.status(404).json({
+                success: false,
+                message: 'Order not found or you are not the provider'
+            });
+        }
+
+        if (order.status !== 'pending') {
+            await transaction.rollback();
+            return res.status(400).json({
+                success: false,
+                message: `Only pending orders can be declined (current status: ${order.status})`
+            });
+        }
+
+        // Update order
+        await order.update({
+            status: 'declined',
+            declineReason: reason || 'No reason provided',
+            updatedAt: new Date()
+        }, { transaction });
+
+        await transaction.commit();
+
+        try {
+            // Get updated order with customer details (outside transaction)
+            const updatedOrder = await Order.findByPk(orderId, {
+                include: [
+                    {
+                        model: User,
+                        as: 'Customer',
+                        attributes: ['firstName', 'lastName', 'phoneNumber']
+                    },
+                    {
+                        model: Service,
+                        as: 'Service',
+                        attributes: ['name', 'price']
+                    }
+                ]
+            });
+
+            return res.json({
+                success: true,
+                message: 'Order declined successfully',
+                order: updatedOrder
+            });
+        } catch (queryError) {
+            console.error('Error fetching updated order:', queryError);
+            return res.json({
+                success: true,
+                message: 'Order declined successfully (details unavailable)'
+            });
+        }
+
+    } catch (error) {
+        // Only rollback if transaction is still active
+        if (transaction.finished !== 'commit') {
+            await transaction.rollback();
+        }
+        
+        console.error('Decline order error:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'Failed to decline order',
+            error: process.env.NODE_ENV === 'development' 
+                ? error.message 
+                : 'Internal server error'
+        });
+    }
+}
