@@ -52,3 +52,60 @@ export async function GetMyServices(req,res){
         }
     })
 }
+
+export async function updateService(req, res) {
+    const { id } = req.params; // service ID to update
+    const updates = req.body; // fields to update (name, price, description, etc.)
+    
+    try {
+        // First find the service to ensure it exists and belongs to this provider
+        const service = await Service.findOne({
+            where: {
+                id: id,
+                providerId: req.user.id // ensure the service belongs to the requesting provider
+            }
+        });
+
+        if (!service) {
+            return res.status(404).json({ message: 'Service not found or you are not the owner' });
+        }
+
+        // Update the service with the new values
+        await service.update(updates);
+
+        // Return the updated service
+        return res.status(200).json({
+            message: 'Service updated successfully',
+            service: service
+        });
+    } catch (error) {
+        console.error('Error updating service:', error);
+        return res.status(500).json({ message: 'Error updating service' });
+    }
+}
+
+export async function getServiceById(req, res) {
+    const { id } = req.params; // service ID to fetch
+    
+    try {
+        const service = await Service.findOne({
+            where: { id },
+            include: [{
+                model: User,
+                as: 'Provider', // assuming you have this association set up
+                attributes: ['id', 'firstName', 'lastName'] // only include these fields
+            }]
+        });
+
+        if (!service) {
+            return res.status(404).json({ message: 'Service not found' });
+        }
+
+        return res.status(200).json({
+            service: service
+        });
+    } catch (error) {
+        console.error('Error fetching service:', error);
+        return res.status(500).json({ message: 'Error fetching service' });
+    }
+}

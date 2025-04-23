@@ -13,8 +13,8 @@ ordersRouter.get('/provider/MyOrders', authenticateUser, providerOnly , asyncHan
 
 ordersRouter.post('/delete/:id', authenticateUser, asyncHandler(ordersController.deleteOrder));
 
-ordersRouter.put('/accept/:id', authenticateUser, asyncHandler(ordersController.acceptOrder))
+ordersRouter.put('/accept/:id', authenticateUser, providerOnly, asyncHandler(ordersController.acceptOrder))
 
-ordersRouter.put('/decline/:id', authenticateUser, asyncHandler(ordersController.declineOrder))
+ordersRouter.put('/decline/:id', authenticateUser, providerOnly, asyncHandler(ordersController.declineOrder))
 
 export default ordersRouter

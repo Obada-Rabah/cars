@@ -10,9 +10,12 @@ const providerRouter = express.Router()
 
 providerRouter.get('/providers', authenticateUser, asyncHandler(providerController.getProviders))
 
-providerRouter.post('/service', authenticateUser, providerOnly , asyncHandler(providerController.addService))
+providerRouter.post('/add', authenticateUser, providerOnly , asyncHandler(providerController.addService))
 
 providerRouter.get('/mine', authenticateUser, providerOnly , asyncHandler(providerController.GetMyServices))
 
+providerRouter.get('/service/:id', authenticateUser, asyncHandler(providerController.getServiceById))
+
+providerRouter.put('/service/:id', authenticateUser, providerOnly, asyncHandler(providerController.updateService))
 
 export default providerRouter
