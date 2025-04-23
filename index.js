@@ -7,6 +7,7 @@ import { User } from './models/index.js'
 import morgan from 'morgan'
 import providerRouter from './Routes/providers.router.js'
 import ordersRouter from './Routes/orders.router.js'
+import reportRouter from './Routes/report.router.js'
 
 dotenv.config()
 
@@ -26,6 +27,8 @@ app.use('/api/cars', carsRouter)
 app.use('/api/providers', providerRouter)
 
 app.use('/api/orders', ordersRouter)
+
+app.use('/api/report', reportRouter)
 
 
 app.use((err, req, res, next) => {

@@ -3,13 +3,15 @@ import { Car } from "./cars.model.js";
 import { Service } from "./service.model.js"
 import { Order } from './orders.model.js';
 import { DeletedOrder } from './deletedOrders.model.js'
+import { Report } from "./report.model.js";
 
 const models = {
     User,
     Car,
     Service,
     Order,
-    DeletedOrder
+    DeletedOrder,
+    Report
 }
 
 
@@ -20,4 +22,4 @@ Object.keys(models).forEach(modelName => {
     }
   });
 
-export {User, Car, Service, Order};
+export {User, Car, Service, Order, DeletedOrder, Report};
