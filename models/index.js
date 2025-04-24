@@ -4,6 +4,7 @@ import { Service } from "./service.model.js"
 import { Order } from './orders.model.js';
 import { DeletedOrder } from './deletedOrders.model.js'
 import { Report } from "./report.model.js";
+import { ChatMessage } from "./chat.model.js";
 
 const models = {
     User,
@@ -11,7 +12,8 @@ const models = {
     Service,
     Order,
     DeletedOrder,
-    Report
+    Report,
+    ChatMessage
 }
 
 
@@ -22,4 +24,4 @@ Object.keys(models).forEach(modelName => {
     }
   });
 
-export {User, Car, Service, Order, DeletedOrder, Report};
+export {User, Car, Service, Order, DeletedOrder, Report, ChatMessage};

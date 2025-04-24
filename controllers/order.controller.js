@@ -157,8 +157,22 @@ export async function GetProviderOrders(req, res) {
             date: order.createdAt,
             carModel: order.CarModel, // Include car model
             customer: customerMap[order.CustomerId],
-            service: serviceMap[order.ServiceId]
+            service: serviceMap[order.ServiceId],
+            declineReason: order.declineReason
         }));
+
+         // 6. Sort orders by status: pending first, then accepted, then declined
+         enrichedOrders.sort((a, b) => {
+            // Define the priority of each status
+            const statusPriority = {
+                'pending': 1,
+                'accepted': 2,
+                'declined': 3,
+                'completed': 4 // if you want to include completed orders
+            };
+            
+            return statusPriority[a.status] - statusPriority[b.status];
+        });
 
         res.json({ 
             success: true,

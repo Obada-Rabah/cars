@@ -8,10 +8,14 @@ import morgan from 'morgan'
 import providerRouter from './Routes/providers.router.js'
 import ordersRouter from './Routes/orders.router.js'
 import reportRouter from './Routes/report.router.js'
+import { initSocket } from './utils/socket.js'
+import chatRouter from './Routes/chat.router.js'
 
 dotenv.config()
 
 initDB()
+
+
 
 const app = express()
 
@@ -30,12 +34,22 @@ app.use('/api/orders', ordersRouter)
 
 app.use('/api/report', reportRouter)
 
+app.use('/api/chat', chatRouter);
+
 
 app.use((err, req, res, next) => {
   console.error(err.message);
   res.status(500).json({error: 'Something went wrong'})
 })
 
-app.listen(port, () => {
-  console.log(`Server is running on http://localhost:${port}`);
-});
+// Replace initDB() call with:
+try {
+  await initDB();
+  const server = app.listen(port, () => {
+    console.log(`Server is running on http://localhost:${port}`);
+  });
+  initSocket(server);
+} catch (error) {
+  console.error('Failed to start server:', error);
+  process.exit(1);
+}
