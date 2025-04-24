@@ -10,6 +10,7 @@ import ordersRouter from './Routes/orders.router.js'
 import reportRouter from './Routes/report.router.js'
 import { initSocket } from './utils/socket.js'
 import chatRouter from './Routes/chat.router.js'
+import notificationRouter from './Routes/notification.router.js';
 
 dotenv.config()
 
@@ -36,6 +37,7 @@ app.use('/api/report', reportRouter)
 
 app.use('/api/chat', chatRouter);
 
+app.use('/api/notifications', notificationRouter);
 
 app.use((err, req, res, next) => {
   console.error(err.message);
