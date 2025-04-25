@@ -17,4 +17,10 @@ chatRouter.get(
     asyncHandler(chatController.getMessages)
 );
 
+chatRouter.get(
+    '/',
+    authenticateUser,
+    asyncHandler(chatController.getChatList)
+);
+
 export default chatRouter;
