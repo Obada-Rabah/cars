@@ -10,6 +10,7 @@ import ordersRouter from './Routes/orders.router.js'
 import reportRouter from './Routes/report.router.js'
 import { initSocket } from './utils/socket.js'
 import chatRouter from './Routes/chat.router.js'
+import cors from 'cors'
 
 dotenv.config()
 
@@ -21,8 +22,9 @@ const app = express()
 
 app.use(morgan('dev'))
 app.use(express.json())
+app.use(cors())
 
-const port = process.env.PORT || 3000
+const port = process.env.PORT || 3001
 
 app.use('/api/auth', authRouter)
 

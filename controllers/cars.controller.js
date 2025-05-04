@@ -38,7 +38,7 @@ export async function getCarById(req,res){
 
     const car = await Car.findOne({
         where: { id: carId },
-        attributes: { exclude: ['updatedAt', 'userId']}
+        attributes: { exclude: ['updatedAt']}
     });
 
     if(car){
