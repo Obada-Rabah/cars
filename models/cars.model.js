@@ -30,7 +30,11 @@ const Car = sequelize.define('cars', {
     userName:{
         type: DataTypes.STRING,
         allowNull: false
-    }
+    },
+    Deleted: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false, // Default value set to false (not deleted)
+    },
 })
 
 Car.associate = (models) => {

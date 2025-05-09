@@ -13,7 +13,7 @@ const models = {
     Order,
     DeletedOrder,
     Report,
-    ChatMessage
+    ChatMessage,
 }
 
 

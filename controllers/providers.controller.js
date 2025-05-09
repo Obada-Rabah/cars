@@ -109,3 +109,24 @@ export async function getServiceById(req, res) {
         return res.status(500).json({ message: 'Error fetching service' });
     }
 }
+
+export const softDeleteService = async (req, res) => {
+    const serviceId = req.params.id;
+
+    try {
+        // Find the service by its ID
+        const service = await Service.findByPk(serviceId);
+
+        if (!service) {
+            return res.status(404).json({ message: 'Service not found' });
+        }
+
+        // Update the "Deleted" column to true to perform the soft delete
+        await service.update({ Deleted: true });
+
+        return res.status(200).json({ message: 'Service soft deleted successfully' });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ message: 'Soft delete error: ' + error.message });
+    }
+};

@@ -26,6 +26,10 @@ const Service = sequelize.define('services', {
             key: 'id',
         },
     },
+    Deleted: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false, // Default value set to false (not deleted)
+    },
 });
 
 Service.associate = (models) => {

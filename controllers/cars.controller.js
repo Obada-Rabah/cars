@@ -47,3 +47,27 @@ export async function getCarById(req,res){
         res.status(404).json({ message: 'car not found' })
     }
 }
+
+export async function softDeleteCar(req, res) {
+    const carId = parseInt(req.params.id, 10);
+    if (isNaN(carId)) {
+        return res.status(400).json({ message: 'Invalid car ID' });
+    }
+
+    try {
+        const car = await Car.findOne({ where: { id: carId, Deleted: false } });
+
+        if (!car) {
+            return res.status(404).json({ message: 'Car not found or already deleted' });
+        }
+
+        // Update the 'deleted' column to true (soft delete)
+        car.Deleted = true;
+        await car.save();
+
+        res.json({ message: 'Car has been soft deleted successfully' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error deleting the car' });
+    }
+}

@@ -11,5 +11,7 @@ carsRouter.get('/car/:id', asyncHandler(carsController.getCarById))
 
 carsRouter.post('/add', authenticateUser ,asyncHandler(carsController.addCar))
 
+carsRouter.put('/delete/:id', authenticateUser, asyncHandler(carsController.softDeleteCar))
+
 
 export default carsRouter

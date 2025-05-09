@@ -38,9 +38,8 @@ const User = sequelize.define('users', {
 
 User.associate = (models) => {
     // Regular user's cars (if applicable)
-    User.hasMany(models.Car, { 
-        foreignKey: 'userId' 
-    });
+    User.hasMany(Car, { as: 'cars', foreignKey: 'userId' });
+
     
     // --- PROVIDER-RELATED ASSOCIATIONS ---
     // A provider can offer multiple services
